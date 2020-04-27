@@ -1,6 +1,86 @@
-canvas{
-    max-height: 80vh;
-    max-width: 80vw;
+@font-face {
+    font-family: "MuseoSans-300";
+    font-style: normal;
+    font-weight: normal;
+    src: local("MuseoSans-300"), url("MuseoSans-300.ttf") format("truetype");
+}
+body {
+    background-color: #f4f6f8;
+    font-family: "MuseoSans-300";
+}
+
+.grid-container {
+    height: 80vh;
+    display: grid;
+    grid-column-gap: 5px;
+
+    grid-template-rows: auto auto auto;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+        "inputArea inputArea"
+        "imageArea calculationArea"
+        "imageArea chartArea";
+}
+
+canvas {
+    max-height: 100vh;
+    // max-width: 80vw;
+    grid-area: imageArea;
+    grid-row-start: 2;
+    grid-row-end: 4;
+}
+
+.input-container {
+    grid-area: inputArea;
+}
+
+.chart-container {
+    grid-area: chartArea;
+    display: none;
+}
+
+.calculations {
+    grid-area: calculationArea;
+    display: none;
+}
+
+.slidecontainer {
+    width: 100%; /* Width of the outside container */
+}
+
+/* The slider itself */
+.slider {
+    -webkit-appearance: none; /* Override default CSS styles */
+    appearance: none;
+    width: 100%; /* Full-width */
+    height: 25px; /* Specified height */
+    background: #d3d3d3; /* Grey background */
+    outline: none; /* Remove outline */
+    opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+    -webkit-transition: 0.2s; /* 0.2 seconds transition on hover */
+    transition: opacity 0.2s;
+}
+
+/* Mouse-over effects */
+.slider:hover {
+    opacity: 1; /* Fully shown on mouse-over */
+}
+
+/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none; /* Override default look */
+    appearance: none;
+    width: 25px; /* Set a specific slider handle width */
+    height: 25px; /* Slider handle height */
+    background: #4caf50; /* Green background */
+    cursor: pointer; /* Cursor on hover */
+}
+
+.slider::-moz-range-thumb {
+    width: 25px; /* Set a specific slider handle width */
+    height: 25px; /* Slider handle height */
+    background: #4caf50; /* Green background */
+    cursor: pointer; /* Cursor on hover */
 }
 
 /* tell the SVG path to be a thin blue line without any area fill */
@@ -11,22 +91,17 @@ path {
 }
 
 .axis {
-  shape-rendering: crispEdges;
+    shape-rendering: crispEdges;
 }
 
 .x.axis line {
-  stroke: lightgrey;
+    stroke: lightgrey;
 }
 
 .x.axis .minor {
-  stroke-opacity: .5;
+    stroke-opacity: 0.5;
 }
 
 .x.axis path {
-  display: none;
-}
-
-.y.axis line, .y.axis path {
-  fill: none;
-  stroke: #000;
+    display: none;
 }

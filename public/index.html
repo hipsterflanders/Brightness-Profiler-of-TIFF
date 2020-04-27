@@ -6,29 +6,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brightness Profiler</title>
 
+    <!-- Load plotty.js -->
     <script src="plotty.min.js"></script>
-    <script src="https://mbostock.github.com/d3/d3.v2.js"></script>
+    <!-- Load d3.js -->
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <!-- Load geotiff.js -->
     <script async src="https://cdn.jsdelivr.net/npm/geotiff"></script>
+    <!-- Load custom script -->
     <script src="script.js"></script>
 
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <div class="input">
-        <input type="file" id="file">
-    </div>
-    <div>
-        <canvas id="plot"></canvas>
-    </div>
-    <div class="output">
-        <div id="graph" class="aGraph"></div>
-        <div class="slidecontainer">
-            <input type="range" min="0" max="10" value="1" class="slider" id="myRange">
+    <h1>Brightness plotter</h1>
+    <p>Load a .tiff file to plot the brightness and get the max and min values.</p>
+    <div class='grid-container'>
+        <div class="input-container">
+            <input type="file" id="file">
         </div>
-        <span id="output"></span>
-    </div>
 
+        <canvas id="plot"></canvas>
+
+        <div class='calculations' id='calculations'>
+            <div>
+                Max value: <span id="maxValue"></span>
+            </div>
+            <div>
+                Min value: <span id="minValue"></span>
+            </div>
+            <div>
+                Luminance difference: <span id="ratio"></span> (differences bigger than 25% are noticeable by the human eye)
+            </div>
+        </div>
+        <div class="chart-container" id="chart-container">
+            <div id="graph" class="aGraph"></div>
+            <label for="myRange">Smoothing: </label><span id="output" style="display: none;"></span>
+            <div class="slidecontainer" style="display: none;">
+                <input type="range" min="0" max="20" value="0" class="slider" id="myRange">
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

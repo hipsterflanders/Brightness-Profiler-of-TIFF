@@ -1,18 +1,27 @@
 var outputSpan = null;
+var maxValueSpan = null;
+var minValueSpan = null;
+var ratioSpan = null;
 var slider = null;
+var line = null;
+var horizontal_line = null;
 window.addEventListener('load', (event) => {
+    line = plotLine([0, 1]);
+    horizontal_line = plotLine([0, 1]);
     //console.log(GeoTIFF);
     //console.log(d3);
     slider = document.getElementById("myRange");
     outputSpan = document.getElementById('output');
-    outputSpan.textContent = 'started';
+    outputSpan.textContent = 'load image to start';
+    maxValueSpan = document.getElementById('maxValue');
+    minValueSpan = document.getElementById('minValue');
+    ratioSpan = document.getElementById('ratio');
 
     const input = document.getElementById('file');
     input.onchange = async function () {
         const tiff = await GeoTIFF.fromBlob(input.files[0]);
         outputSpan.textContent = 'Got blob, starting to process.';
         processimage(tiff);
-        outputSpan.textContent = 'Proccessing ended';
     }
 });
 
@@ -23,7 +32,7 @@ window.addEventListener('load', (event) => {
 async function processimage(tiff) {
     outputSpan.textContent = 'Getting image from tiff';
     const image = await tiff.getImage(); // by default, the first image is read.
-    outputSpan.textContent = 'Image gotten';
+    outputSpan.textContent = 'Image loaded';
     /*
     const width = image.getWidth();
     const height = image.getHeight();
@@ -34,7 +43,7 @@ async function processimage(tiff) {
     */
     const data = await image.readRasters();
     //console.log(data);
-    outputSpan.textContent = 'Data outputted';
+    outputSpan.textContent = 'Data converted to raster';
 
     const Xcenter = await Math.floor(image.getWidth() / 2);
     const Ycenter = await Math.floor(image.getHeight() / 2);
@@ -43,18 +52,29 @@ async function processimage(tiff) {
 
     const horizontalCenterLine = await getcolumn(data[0], Xcenter, image.getWidth(), image.getHeight());
 
+    updateLine(jnd(horizontalCenterLine), line);
+    updateLine(jnd(verticalCenterLine), horizontal_line);
+    outputSpan.textContent = slider.value;
 
-    plotLine(smooth(horizontalCenterLine, 1));
+    /*
     slider.oninput = function () {
         outputSpan.textContent = this.value;
-        plotLine(smooth(horizontalCenterLine, this.value));
+        updateLine(jnd(repeatSmooth(horizontalCenterLine, this.value)), line);
     }
+    */
 
     plotImage(data, image);
+    const min = await Math.min.apply(null, horizontalCenterLine);
+    const max = await Math.max.apply(null, horizontalCenterLine);
+    minValueSpan.textContent = await min;
+    maxValueSpan.textContent = await max;
+    ratioSpan.textContent = await Math.round((max / min - 1) * 100) + '%';
+    document.getElementById("calculations").style.display = "block";
+    document.getElementById("chart-container").style.display = "block";
 }
 
 
-
+/*
 function smooth(array, n) {
     smoothData = new Array(Math.floor(array.length / n));
     var sum = 0;
@@ -73,26 +93,40 @@ function smooth(array, n) {
 
     return smoothData;
 }
-/*
-function smooth(values, alpha) {
-    var weighted = average(values) * alpha;
+*/
+
+function smooth(values) {
     var smoothed = [];
     for (var i in values) {
         var curr = values[i];
-        var prev = smoothed[i - 1] || values[values.length - 1];
-        var next = curr || values[0];
-        var improved = Number(this.average([weighted, prev, curr, next]).toFixed(2));
+        var prev = smoothed[i - 1] || values[0];
+        var next = curr || values[values.length - 1];
+        var improved = Number(this.average([prev, curr, next]).toFixed(2));
         smoothed.push(improved);
     }
     return smoothed;
 }
-*/
-function smoother(values, n, repeat) {
-    smoother = smooth(values, n);
-    for (let i = 0; i < repeat; i++) {
-        smoother = smooth(smoother, n);
+
+function jnd(data) {
+    var jnd = new Array(data.length);
+    min = Math.min.apply(null, data);
+    for (let i = 0; i < data.length; i++) {
+        jnd[i] = (Math.pow(data[i] / min, 0.33) - 1) / 0.079; //*65536
     }
-    return smoother;
+    return jnd;
+}
+
+var smoothedArrays = [];
+
+function repeatSmooth(values, repeat) {
+    if (smoothedArrays.length == 0) {
+        smoothedArrays.push(values);
+    }
+    smoother = smooth(values);
+    for (let i = smoothedArrays.length; i < repeat * 5; i++) {
+        smoothedArrays[i] = smooth(smoothedArrays[i - 1]);
+    }
+    return smoothedArrays[repeat * 5];
 }
 
 function average(data) {
@@ -114,63 +148,65 @@ function getcolumn(array, column, width, height) {
 }
 
 function plotLine(data) {
-    //console.log(data);
+    // set the dimensions and margins of the graph
+    var margin = { top: 10, right: 30, bottom: 10, left: 60 },
+        width = 1000 - margin.left - margin.right,
+        height = 200 - margin.top - margin.bottom;
 
-    // define dimensions of graph
-    var m = [80, 80, 80, 5]; // margins
-    var w = 1000 - m[1] - m[3]; // width
-    var h = 400 - m[0] - m[2]; // height
+    // append the svg object to the body of the page
+    var svg = d3.select("#graph")
+        .append("svg")
+        .attr("viewBox", `0 0 1000 200`)
+        .append("g")
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
 
-    // X scale will fit all values from data[] within pixels 0-w
-    var x = d3.scale.linear().domain([0, data.length]).range([0, w]);
-    // Y scale will fit values from 0-10 within pixels h-0 (Note the inverted domain for the y-scale: bigger is up!)
-    var y = d3.scale.linear().domain([Math.min.apply(null, data), Math.max.apply(null, data)]).range([h, 0]);
-    // automatically determining max range can work something like this
-    // var y = d3.scale.linear().domain([0, d3.max(data)]).range([h, 0]);
+    // Add X axis
+    var x = d3.scaleLinear()
+        .domain([0, data.length])
+        .range([0, width]);
+    /*
+    var xAxis = svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x));
+        */
 
-    // create a line function that can convert data[] into x and y points
-    var line = d3.svg.line()
-        // assign the X function to plot our line as we wish
-        .x(function (d, i) {
-            // return the X coordinate where we want to plot this datapoint
-            return x(i);
-        })
-        .y(function (d) {
-            // return the Y coordinate where we want to plot this datapoint
-            return y(d);
-        })
+    // Add Y axis
+    var y = d3.scaleLinear()
+        .domain([Math.min.apply(null, data), Math.max.apply(null, data)])
+        .range([height, 0]);
 
-    // Add an SVG element with the desired dimensions and margin.
-    var graph = d3.select("#graph").append("svg:svg")
-        .attr("width", w + m[1] + m[3])
-        .attr("height", h + m[0] + m[2])
-        .append("svg:g")
-        .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+    var yAxis = svg.append("g")
+        .call(d3.axisLeft(y));
 
-    // create yAxis
-    var xAxis = d3.svg.axis().scale(x).tickSize(-h).tickSubdivide(true);
-    // Add the x-axis.
-    graph.append("svg:g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + h + ")")
-        .call(xAxis);
+    // Add the line
+    var path = svg.append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 1.5)
+        .attr("d", d3.line()
+            .x(function (d, i) { return x(i) })
+            .y(function (d) { return y(d) })
+        )
 
-
-    // create left yAxis
-    var yAxisLeft = d3.svg.axis().scale(y).ticks(4).orient("right");
-    // Add the y-axis to the left
-    graph.append("svg:g")
-        .attr("class", "y axis")
-        .attr("transform", "translate(" + w + ",0)")
-        .call(yAxisLeft);
-
-    // Add the line by appending an svg:path element with the data line we created above
-    // do this AFTER the axes above so that the line is above the tick-lines
-    graph.append("svg:path").attr("d", line(data));
+    return { x: x, y: y, path: path, yAxis: yAxis };
 }
 
-function updateLine(data){
-    
+function updateLine(data, line) {
+    line.x.domain([0, data.length]);
+    line.y.domain([Math.min.apply(null, data), Math.max.apply(null, data)]);
+
+    //line.xAxis.call(d3.axisBottom(line.x));
+    line.yAxis.call(d3.axisLeft(line.y));
+    line.path.datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 1.5)
+        .attr("d", d3.line()
+            .x(function (d, i) { return line.x(i) })
+            .y(function (d) { return line.y(d) })
+        )
 }
 
 async function plotImage(data, image) {
