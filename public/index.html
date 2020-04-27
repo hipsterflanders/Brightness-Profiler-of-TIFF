@@ -36,14 +36,17 @@
                 Min value: <span id="minValue"></span>
             </div>
             <div>
-                Luminance difference: <span id="ratio"></span> (differences bigger than 25% are noticeable by the human eye)
+                Luminance difference: <span id="ratio"></span> (differences bigger than 25% are noticeable by the human
+                eye)
             </div>
         </div>
         <div class="chart-container" id="chart-container">
             <div id="graph" class="aGraph"></div>
-            <label for="myRange">Smoothing: </label><span id="output" style="display: none;"></span>
-            <div class="slidecontainer" style="display: none;">
-                <input type="range" min="0" max="20" value="0" class="slider" id="myRange">
+            <div style="display: none;">
+                <label for="myRange">Smoothing: </label><span id="output"></span>
+                <div class="slidecontainer">
+                    <input type="range" min="0" max="20" value="0" class="slider" id="myRange">
+                </div>
             </div>
         </div>
     </div>

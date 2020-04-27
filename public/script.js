@@ -116,6 +116,15 @@ function jnd(data) {
     return jnd;
 }
 
+function scaledJnd(data) {
+    var jnd = new Array(data.length);
+    min = Math.min.apply(null, data);
+    for (let i = 0; i < data.length; i++) {
+        jnd[i] = (Math.pow(data[i] / min, 0.33) - 1) / 0.079*65536;
+    }
+    return jnd;
+}
+
 var smoothedArrays = [];
 
 function repeatSmooth(values, repeat) {
@@ -176,8 +185,16 @@ function plotLine(data) {
         .domain([Math.min.apply(null, data), Math.max.apply(null, data)])
         .range([height, 0]);
 
+    var dangerZone = svg.append("rect")
+        .attr('fill', 'rgb(255, 126, 126)')
+        .attr('width', width)
+        .attr('height', 0)
+        .attr('x', 0)
+        .attr('y', 0);
+
     var yAxis = svg.append("g")
         .call(d3.axisLeft(y));
+
 
     // Add the line
     var path = svg.append("path")
@@ -190,7 +207,7 @@ function plotLine(data) {
             .y(function (d) { return y(d) })
         )
 
-    return { x: x, y: y, path: path, yAxis: yAxis };
+    return { x: x, y: y, path: path, yAxis: yAxis, dangerZone: dangerZone };
 }
 
 function updateLine(data, line) {
@@ -206,7 +223,8 @@ function updateLine(data, line) {
         .attr("d", d3.line()
             .x(function (d, i) { return line.x(i) })
             .y(function (d) { return line.y(d) })
-        )
+        );
+    line.dangerZone.attr('height', line.y(1)>0?line.y(1):0);
 }
 
 async function plotImage(data, image) {
