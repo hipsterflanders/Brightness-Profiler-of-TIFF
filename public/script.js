@@ -17,13 +17,100 @@ window.addEventListener('load', (event) => {
     minValueSpan = document.getElementById('minValue');
     ratioSpan = document.getElementById('ratio');
 
+    /*
     const input = document.getElementById('file');
     input.onchange = async function () {
         const tiff = await GeoTIFF.fromBlob(input.files[0]);
         outputSpan.textContent = 'Got blob, starting to process.';
         processimage(tiff);
     }
+    */
+    // Setup listeners.
+    var dropZone = document.getElementById('drop');
+    dropZone.addEventListener('dragover', handleDragOver, false);
+    dropZone.addEventListener('drop', handleFileSelect, false);
+
+    var fileInput = document.getElementById('files');
+    fileInput.addEventListener('change', handleFileSelect, false);
 });
+
+async function handleTifF(file){
+    const tiff = await GeoTIFF.fromBlob(file);
+    outputSpan.textContent = 'Got blob, starting to process.';
+    processimage(tiff);
+}
+
+function handleFileSelect(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+
+    try {
+        var files = evt.dataTransfer.files;
+    } catch (e) {
+        var files = evt.target.files;
+    }
+
+    const filetype = files[0].name.split('.').pop();
+    if(filetype == 'TIF'){
+        handleTifF(files[0]);
+    }else if(filetype == 'CR2'){
+        console.log('Is cr2');
+    }else{
+        alert('Cannot open '+filetype+' files. Use CR2 or TIFF!');
+    }
+    /*
+        var output = [];
+        for (var i = 0, f; f = files[i]; i++) {
+            var reader = new FileReader();
+    
+            reader.onload = (function (o) {
+                return function (e) {
+                    // Get the image file as a buffer
+                    var buf = new Uint8Array(e.currentTarget.result);
+    
+                    // Get the RAW metadata
+                    var metadata = dcraw(buf, { verbose: true, identify: true }).split('\n').filter(String);
+    
+                    // Create the display elements
+                    var id = btoa(o.name).replace(/=/g, '');
+                    var elem = `
+                        <div class="mdl-cell mdl-cell--4-col mdl-card mdl-shadow--2dp">
+                            <div class="mdl-card__title mdl-card--expand">
+                            <h2 class="mdl-card__title-text">${o.name}</h2>
+                            </div>
+                            <div class="mdl-card__media">
+                                <img class="thumbnail" id="${'thumb-' + id}">
+                            </div>
+                            <div class="mdl-card__supporting-text">
+                            <ul><li>${metadata.join('</li><li>')}</li></ul>
+                            </div>
+                        </div>
+                        `;
+    
+                    document.getElementById('list').innerHTML += elem;
+    
+                    // Extract the thumbnail
+                    var thumbnail = dcraw(buf, { extractThumbnail: true });
+    
+                    // Create thumbnail
+                    var blob = new Blob([thumbnail], { type: "image/jpeg" });
+                    var urlCreator = window.URL || window.webkitURL;
+                    var imageUrl = urlCreator.createObjectURL(blob);
+                    var img = document.querySelector("#thumb-" + id);
+                    img.src = imageUrl;
+                };
+            })(f);
+    
+            reader.readAsArrayBuffer(f);
+        }
+        */
+}
+
+function handleDragOver(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'copy';
+}
 
 
 
@@ -54,7 +141,7 @@ async function processimage(tiff) {
 
     updateLine(jnd(horizontalCenterLine), line);
     updateLine(jnd(verticalCenterLine), horizontal_line);
-    outputSpan.textContent = slider.value;
+    //outputSpan.textContent = slider.value;
 
     /*
     slider.oninput = function () {
@@ -120,7 +207,7 @@ function scaledJnd(data) {
     var jnd = new Array(data.length);
     min = Math.min.apply(null, data);
     for (let i = 0; i < data.length; i++) {
-        jnd[i] = (Math.pow(data[i] / min, 0.33) - 1) / 0.079*65536;
+        jnd[i] = (Math.pow(data[i] / min, 0.33) - 1) / 0.079 * 65536;
     }
     return jnd;
 }
@@ -224,7 +311,7 @@ function updateLine(data, line) {
             .x(function (d, i) { return line.x(i) })
             .y(function (d) { return line.y(d) })
         );
-    line.dangerZone.attr('height', line.y(1)>0?line.y(1):0);
+    line.dangerZone.attr('height', line.y(1) > 0 ? line.y(1) : 0);
 }
 
 async function plotImage(data, image) {

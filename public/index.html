@@ -6,12 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brightness Profiler</title>
 
+    <!-- Load dcraw.js -->
+    <script src="https://cdn.jsdelivr.net/npm/dcraw"></script>
+    <!-- Load geotiff.js -->
+    <script async src="https://cdn.jsdelivr.net/npm/geotiff"></script>
     <!-- Load plotty.js -->
     <script src="plotty.min.js"></script>
     <!-- Load d3.js -->
     <script src="https://d3js.org/d3.v4.js"></script>
-    <!-- Load geotiff.js -->
-    <script async src="https://cdn.jsdelivr.net/npm/geotiff"></script>
     <!-- Load custom script -->
     <script src="script.js"></script>
 
@@ -21,9 +23,14 @@
 <body>
     <h1>Brightness plotter</h1>
     <p>Load a .tiff file to plot the brightness and get the max and min values.</p>
+    <span id="output"></span>
     <div class='grid-container'>
         <div class="input-container">
-            <input type="file" id="file">
+            <div class="drop-area" id="drop">
+                <h5>Drop RAW files here</h5>
+                <input type="file" id="files" name="files[]" multiple />
+              </div>
+            <!--<input type="file" id="file">-->
         </div>
 
         <canvas id="plot"></canvas>
@@ -43,12 +50,18 @@
         <div class="chart-container" id="chart-container">
             <div id="graph" class="aGraph"></div>
             <div style="display: none;">
-                <label for="myRange">Smoothing: </label><span id="output"></span>
+                <label for="myRange">Smoothing: </label>
                 <div class="slidecontainer">
                     <input type="range" min="0" max="20" value="0" class="slider" id="myRange">
                 </div>
             </div>
         </div>
+        <footer>
+            Made by
+            <author>
+                Perre Verhoeven
+            </author>
+        </footer>
     </div>
 </body>
 

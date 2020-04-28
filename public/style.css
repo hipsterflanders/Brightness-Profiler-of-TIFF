@@ -26,21 +26,30 @@ body {
 
 @media (max-width: 1000px) {
   .grid-container {
-    height: 80vh;
     display: -ms-grid;
     display: grid;
     grid-column-gap: 5px;
-    justify-items: center;
     -ms-grid-rows: auto auto auto auto;
         grid-template-rows: auto auto auto auto;
-    -ms-grid-columns: 1fr;
-        grid-template-columns: 1fr;
         grid-template-areas: "inputArea" "imageArea" "calculationArea" "chartArea";
   }
 }
 
+.drop-area {
+  border: 2px dashed #bbb;
+  border-radius: 5px;
+  padding: 25px;
+  text-align: center;
+  color: #bbb;
+  margin: 20px;
+}
+
 canvas {
   max-height: 100vh;
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: auto;
+  margin-right: auto;
   grid-area: imageArea;
 }
 
@@ -138,5 +147,12 @@ path {
 
 .x.axis path {
   display: none;
+}
+
+footer {
+  text-align: center;
+  margin-top: 2em;
+  size: 1em;
+  color: #d8d8d8;
 }
 /*# sourceMappingURL=style.css.map */

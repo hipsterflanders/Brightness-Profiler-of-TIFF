@@ -25,14 +25,13 @@ body {
 }
 @media (max-width: 1000px) {
     .grid-container {
-        height: 80vh;
         display: grid;
         grid-column-gap: 5px;
         //grid-row-gap: 10px;
-        justify-items: center;
+        //justify-items: center;
 
         grid-template-rows: auto auto auto auto;
-        grid-template-columns: 1fr;
+        //grid-template-columns: 1fr;
         grid-template-areas:
             "inputArea"
             "imageArea"
@@ -41,8 +40,22 @@ body {
     }
 }
 
+.drop-area {
+    border: 2px dashed #bbb;
+    border-radius: 5px;
+    padding: 25px;
+    text-align: center;
+    color: #bbb;
+    margin: 20px;
+  }
+
 canvas {
     max-height: 100vh;
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: auto;
+    margin-right: auto;
+ 
     // max-width: 80vw;
     grid-area: imageArea;
     //grid-row-start: 2;
@@ -123,4 +136,11 @@ path {
 
 .x.axis path {
     display: none;
+}
+
+footer{
+    text-align: center;
+    margin-top: 2em;
+    size: 1em;
+    color: rgb(216, 216, 216);
 }
