@@ -34,9 +34,9 @@ body {
         //grid-template-columns: 1fr;
         grid-template-areas:
             "inputArea"
-            "imageArea"
             "calculationArea"
-            "chartArea";
+            "chartArea"
+            "imageArea";
     }
 }
 

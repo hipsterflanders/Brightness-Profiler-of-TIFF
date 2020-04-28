@@ -31,7 +31,7 @@ body {
     grid-column-gap: 5px;
     -ms-grid-rows: auto auto auto auto;
         grid-template-rows: auto auto auto auto;
-        grid-template-areas: "inputArea" "imageArea" "calculationArea" "chartArea";
+        grid-template-areas: "inputArea" "calculationArea" "chartArea" "imageArea";
   }
 }
 
