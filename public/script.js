@@ -34,10 +34,39 @@ window.addEventListener('load', (event) => {
     fileInput.addEventListener('change', handleFileSelect, false);
 });
 
-async function handleTifF(file){
+async function handleTifF(file) {
     const tiff = await GeoTIFF.fromBlob(file);
     outputSpan.textContent = 'Got blob, starting to process.';
     processimage(tiff);
+}
+
+async function handleCr2(f) {
+    console.log('Is cr2');
+    var reader = new FileReader();
+
+    reader.onload = (function (o) {
+        return function (e) {
+            // Get the image file as a buffer
+            var buf = new Uint8Array(e.currentTarget.result);
+            /*
+            // Get the RAW metadata
+            var metadata = dcraw(buf, { verbose: true, identify: true }).split('\n').filter(String);
+            console.log(metadata);
+*/
+
+            outputSpan.textContent = 'Converting to TIFF...';
+            // Convert to TIFF
+            const tiffFile = dcraw(buf, { exportAsTiff: true, use16BitLinearMode: true, useExportMode: true });
+            outputSpan.textContent = 'TIFF conversion to arraybuffer completed, converting to blob...';
+
+            tiffBlob = new Blob([tiffFile]);
+            outputSpan.textContent = 'TIFF converted to blob';
+            handleTifF(tiffBlob);
+
+        };
+    })(f);
+
+    reader.readAsArrayBuffer(f);
 }
 
 function handleFileSelect(evt) {
@@ -51,59 +80,15 @@ function handleFileSelect(evt) {
     }
 
     const filetype = files[0].name.split('.').pop();
-    if(filetype == 'TIF'){
+    if (filetype == 'TIF') {
+        outputSpan.textContent = 'TIFF file detected, starting to process...';
         handleTifF(files[0]);
-    }else if(filetype == 'CR2'){
-        console.log('Is cr2');
-    }else{
-        alert('Cannot open '+filetype+' files. Use CR2 or TIFF!');
+    } else if (filetype == 'CR2') {
+        outputSpan.textContent = 'CR2 file detected, starting to process...';
+        handleCr2(files[0]);
+    } else {
+        alert('Cannot open ' + filetype + ' files. Use CR2 or TIFF!');
     }
-    /*
-        var output = [];
-        for (var i = 0, f; f = files[i]; i++) {
-            var reader = new FileReader();
-    
-            reader.onload = (function (o) {
-                return function (e) {
-                    // Get the image file as a buffer
-                    var buf = new Uint8Array(e.currentTarget.result);
-    
-                    // Get the RAW metadata
-                    var metadata = dcraw(buf, { verbose: true, identify: true }).split('\n').filter(String);
-    
-                    // Create the display elements
-                    var id = btoa(o.name).replace(/=/g, '');
-                    var elem = `
-                        <div class="mdl-cell mdl-cell--4-col mdl-card mdl-shadow--2dp">
-                            <div class="mdl-card__title mdl-card--expand">
-                            <h2 class="mdl-card__title-text">${o.name}</h2>
-                            </div>
-                            <div class="mdl-card__media">
-                                <img class="thumbnail" id="${'thumb-' + id}">
-                            </div>
-                            <div class="mdl-card__supporting-text">
-                            <ul><li>${metadata.join('</li><li>')}</li></ul>
-                            </div>
-                        </div>
-                        `;
-    
-                    document.getElementById('list').innerHTML += elem;
-    
-                    // Extract the thumbnail
-                    var thumbnail = dcraw(buf, { extractThumbnail: true });
-    
-                    // Create thumbnail
-                    var blob = new Blob([thumbnail], { type: "image/jpeg" });
-                    var urlCreator = window.URL || window.webkitURL;
-                    var imageUrl = urlCreator.createObjectURL(blob);
-                    var img = document.querySelector("#thumb-" + id);
-                    img.src = imageUrl;
-                };
-            })(f);
-    
-            reader.readAsArrayBuffer(f);
-        }
-        */
 }
 
 function handleDragOver(evt) {
@@ -111,8 +96,6 @@ function handleDragOver(evt) {
     evt.preventDefault();
     evt.dataTransfer.dropEffect = 'copy';
 }
-
-
 
 // Note: GeoTIFF.Pool will not work
 
@@ -129,19 +112,18 @@ async function processimage(tiff) {
     console.log({ image: image, width: width, height: height, tileHeight: tileHeight, samplesPerPixel: samplesPerPixel });
     */
     const data = await image.readRasters();
-    //console.log(data);
+
     outputSpan.textContent = 'Data converted to raster';
 
     const Xcenter = await Math.floor(image.getWidth() / 2);
     const Ycenter = await Math.floor(image.getHeight() / 2);
     const centerIndex = await image.getWidth() * Ycenter;
     const verticalCenterLine = await data[0].slice(centerIndex, centerIndex + image.getWidth());
-
     const horizontalCenterLine = await getcolumn(data[0], Xcenter, image.getWidth(), image.getHeight());
+
 
     updateLine(jnd(horizontalCenterLine), line);
     updateLine(jnd(verticalCenterLine), horizontal_line);
-    //outputSpan.textContent = slider.value;
 
     /*
     slider.oninput = function () {
@@ -150,7 +132,7 @@ async function processimage(tiff) {
     }
     */
 
-    plotImage(data, image);
+    plotImage(data[0], image.getWidth(), image.getHeight());
     const min = await Math.min.apply(null, horizontalCenterLine);
     const max = await Math.max.apply(null, horizontalCenterLine);
     minValueSpan.textContent = await min;
@@ -158,40 +140,6 @@ async function processimage(tiff) {
     ratioSpan.textContent = await Math.round((max / min - 1) * 100) + '%';
     document.getElementById("calculations").style.display = "block";
     document.getElementById("chart-container").style.display = "block";
-}
-
-
-/*
-function smooth(array, n) {
-    smoothData = new Array(Math.floor(array.length / n));
-    var sum = 0;
-    var j = 0;
-    var c = 0;
-    for (let i = 0; i < array.length; i++) {
-        sum += array[i];
-        c++;
-        if (c == n) {
-            smoothData[j] = Math.floor(sum / n);
-            j++;
-            c = 0;
-            sum = 0;
-        }
-    }
-
-    return smoothData;
-}
-*/
-
-function smooth(values) {
-    var smoothed = [];
-    for (var i in values) {
-        var curr = values[i];
-        var prev = smoothed[i - 1] || values[0];
-        var next = curr || values[values.length - 1];
-        var improved = Number(this.average([prev, curr, next]).toFixed(2));
-        smoothed.push(improved);
-    }
-    return smoothed;
 }
 
 function jnd(data) {
@@ -314,13 +262,13 @@ function updateLine(data, line) {
     line.dangerZone.attr('height', line.y(1) > 0 ? line.y(1) : 0);
 }
 
-async function plotImage(data, image) {
+async function plotImage(data, width, height) {
     const canvas = document.getElementById("plot");
     const plot = new plotty.plot({
         canvas,
-        data: data[0],
-        width: image.getWidth(),
-        height: image.getHeight(),
+        data: data,
+        width: width,
+        height: height,
         domain: [0, 65536],
         colorScale: "viridis"
     });
