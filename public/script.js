@@ -1,7 +1,5 @@
 var outputSpan = null;
 var maxValueSpan = null;
-var minValueSpan = null;
-var ratioSpan = null;
 var slider = null;
 var line = null;
 var horizontal_line = null;
@@ -14,8 +12,6 @@ window.addEventListener('load', (event) => {
     outputSpan = document.getElementById('output');
     outputSpan.textContent = 'load image to start';
     maxValueSpan = document.getElementById('maxValue');
-    minValueSpan = document.getElementById('minValue');
-    ratioSpan = document.getElementById('ratio');
 
     /*
     const input = document.getElementById('file');
@@ -121,9 +117,11 @@ async function processimage(tiff) {
     const verticalCenterLine = await data[0].slice(centerIndex, centerIndex + image.getWidth());
     const horizontalCenterLine = await getcolumn(data[0], Xcenter, image.getWidth(), image.getHeight());
 
+    const horJND = jnd(horizontalCenterLine);
+    const vertJND = jnd(verticalCenterLine);
 
-    updateLine(jnd(horizontalCenterLine), line);
-    updateLine(jnd(verticalCenterLine), horizontal_line);
+    updateLine(horJND, line);
+    updateLine(vertJND, horizontal_line);
 
     /*
     slider.oninput = function () {
@@ -133,11 +131,8 @@ async function processimage(tiff) {
     */
 
     plotImage(data[0], image.getWidth(), image.getHeight());
-    const min = await Math.min.apply(null, horizontalCenterLine);
-    const max = await Math.max.apply(null, horizontalCenterLine);
-    minValueSpan.textContent = await min;
-    maxValueSpan.textContent = await max;
-    ratioSpan.textContent = await Math.round((max / min - 1) * 100) + '%';
+    const max = await Math.round(Math.max.apply(null, horJND)*10)/10;
+    maxValueSpan.textContent = await max+'%';
     document.getElementById("calculations").style.display = "block";
     document.getElementById("chart-container").style.display = "block";
 }
@@ -146,7 +141,7 @@ function jnd(data) {
     var jnd = new Array(data.length);
     min = Math.min.apply(null, data);
     for (let i = 0; i < data.length; i++) {
-        jnd[i] = (Math.pow(data[i] / min, 0.33) - 1) / 0.079; //*65536
+        jnd[i] = (Math.pow(data[i] / min, 0.33) - 1)*100;
     }
     return jnd;
 }
@@ -193,7 +188,7 @@ function getcolumn(array, column, width, height) {
 
 function plotLine(data) {
     // set the dimensions and margins of the graph
-    var margin = { top: 10, right: 30, bottom: 10, left: 60 },
+    var margin = { top: 10, right: 0, bottom: 10, left: 30 },
         width = 1000 - margin.left - margin.right,
         height = 200 - margin.top - margin.bottom;
 
@@ -247,7 +242,9 @@ function plotLine(data) {
 
 function updateLine(data, line) {
     line.x.domain([0, data.length]);
-    line.y.domain([Math.min.apply(null, data), Math.max.apply(null, data)]);
+    const min = Math.min.apply(null, data);
+    const max = Math.max.apply(null, data);
+    line.y.domain([min, max]);
 
     //line.xAxis.call(d3.axisBottom(line.x));
     line.yAxis.call(d3.axisLeft(line.y));
@@ -259,7 +256,7 @@ function updateLine(data, line) {
             .x(function (d, i) { return line.x(i) })
             .y(function (d) { return line.y(d) })
         );
-    line.dangerZone.attr('height', line.y(1) > 0 ? line.y(1) : 0);
+    line.dangerZone.attr('height', (max-7.9) > 0 ? line.y(7.9) : 0);
 }
 
 async function plotImage(data, width, height) {

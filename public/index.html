@@ -23,28 +23,21 @@
 <body>
     <h1>Brightness plotter</h1>
     <p>Load a .tiff file to plot the brightness and get the max and min values.</p>
-    <span id="output"></span>
     <div class='grid-container'>
         <div class="input-container">
             <div class="drop-area" id="drop">
                 <h5>Drop RAW files here</h5>
                 <input type="file" id="files" name="files[]" multiple />
-              </div>
-            <!--<input type="file" id="file">-->
+            </div>
+            <div id="output"></div>
         </div>
 
         <canvas id="plot"></canvas>
 
         <div class='calculations' id='calculations'>
             <div>
-                Max value: <span id="maxValue"></span>
-            </div>
-            <div>
-                Min value: <span id="minValue"></span>
-            </div>
-            <div>
-                Luminance difference: <span id="ratio"></span> (differences bigger than 25% are noticeable by the human
-                eye)
+                <label for="maxValue">Brighness difference = </label> <span id="maxValue"></span>
+                <p class="info">(differences bigger than 7.9% are noticeable by the human eye)</p>
             </div>
         </div>
         <div class="chart-container" id="chart-container">
