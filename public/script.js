@@ -76,7 +76,7 @@ function handleFileSelect(evt) {
     }
 
     const filetype = files[0].name.split('.').pop();
-    if (filetype == 'TIF') {
+    if (filetype.toUpperCase() == 'TIF' || filetype.toUpperCase() == 'TIFF') {
         outputSpan.textContent = 'TIFF file detected, starting to process...';
         handleTifF(files[0]);
     } else if (filetype == 'CR2') {
