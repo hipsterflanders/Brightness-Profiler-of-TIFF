@@ -12,6 +12,7 @@ window.addEventListener('load', (event) => {
     outputSpan = document.getElementById('output');
     outputSpan.textContent = 'load image to start';
     maxValueSpan = document.getElementById('maxValue');
+    uniformitySpan = document.getElementById('uniformity');
 
     /*
     const input = document.getElementById('file');
@@ -131,8 +132,14 @@ async function processimage(tiff) {
     */
 
     plotImage(data[0], image.getWidth(), image.getHeight());
-    const max = await Math.round(Math.max.apply(null, horJND)*10)/10;
-    maxValueSpan.textContent = await max+'%';
+
+    // calculations
+    const max = await Math.max.apply(null, horizontalCenterLine);
+    const min = await Math.min.apply(null, horizontalCenterLine);
+    const maxDiff = await Math.round(Math.max.apply(null, horJND) * 10) / 10;
+
+    maxValueSpan.textContent = await maxDiff + '%';
+    uniformitySpan.textContent = await Math.round(min / max * 1000) / 10 + '%';
     document.getElementById("calculations").style.display = "block";
     document.getElementById("chart-container").style.display = "block";
 }
@@ -141,7 +148,7 @@ function jnd(data) {
     var jnd = new Array(data.length);
     min = Math.min.apply(null, data);
     for (let i = 0; i < data.length; i++) {
-        jnd[i] = (Math.pow(data[i] / min, 0.33) - 1)*100;
+        jnd[i] = (Math.pow(data[i] / min, 0.33) - 1) * 100;
     }
     return jnd;
 }
@@ -256,7 +263,7 @@ function updateLine(data, line) {
             .x(function (d, i) { return line.x(i) })
             .y(function (d) { return line.y(d) })
         );
-    line.dangerZone.attr('height', (max-7.9) > 0 ? line.y(7.9) : 0);
+    line.dangerZone.attr('height', (max - 7.9) > 0 ? line.y(7.9) : 0);
 }
 
 async function plotImage(data, width, height) {
@@ -267,9 +274,33 @@ async function plotImage(data, width, height) {
         width: width,
         height: height,
         domain: [0, 65536],
-        colorScale: "viridis"
+        colorScale: "inferno"
     });
     plot.render();
+
+    canvas.addEventListener('mousemove', function (evt) {
+        var mousePos = getMousePos(canvas, evt);
+        const columnIndex = Math.round(width * (mousePos.x / canvas.offsetWidth));
+        const rowIndex = Math.round(width * (mousePos.y / canvas.offsetHeight));
+        const verticalLine = data.slice(rowIndex*width, rowIndex*width + width);
+        const horizontalLine = getcolumn(data, columnIndex, width, height);
+
+        const horJND = jnd(horizontalLine);
+        const vertJND = jnd(verticalLine);
+
+        updateLine(horJND, line);
+        updateLine(vertJND, horizontal_line);
+
+        //outputSpan.textContent = 'Mouse position y:  '+ mousePos.y / canvas.offsetHeight+', columnIndex: '+rowIndex;
+    }, false);
+}
+
+function getMousePos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+    };
 }
 
 
