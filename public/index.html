@@ -32,8 +32,12 @@
             <div id="output"></div>
         </div>
 
-        <canvas id="plot"></canvas>
-        <svg id="crosslines"></svg>
+        <svg id="crosslines">
+            <line x1="0" y1="0" x2="200" y2="200" style="stroke:black;stroke-width:10" />
+            <foreignObject>
+                <canvas id="plot"></canvas>
+            </foreignObject>
+        </svg>
 
         <div class='calculations' id='calculations'>
             <div>

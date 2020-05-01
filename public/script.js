@@ -289,6 +289,9 @@ function updateLine(data, line) {
 
 async function plotImage(data, width, height) {
     const canvas = document.getElementById("plot");
+    canvas.parentElement.style.height = height;
+    canvas.parentElement.style.width = width;
+    console.log(canvas.parentElement)
     const plot = new plotty.plot({
         canvas,
         data: data,
