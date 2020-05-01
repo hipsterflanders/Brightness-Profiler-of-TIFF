@@ -3,6 +3,7 @@ var maxValueSpan = null;
 var slider = null;
 var line = null;
 var horizontal_line = null;
+
 window.addEventListener('load', (event) => {
     line = plotLine([0, 1]);
     horizontal_line = plotLine([0, 1]);
@@ -15,13 +16,11 @@ window.addEventListener('load', (event) => {
     uniformitySpan = document.getElementById('uniformity');
 
     /*
-    const input = document.getElementById('file');
-    input.onchange = async function () {
-        const tiff = await GeoTIFF.fromBlob(input.files[0]);
-        outputSpan.textContent = 'Got blob, starting to process.';
-        processimage(tiff);
+    slider.oninput = function () {
+        outputSpan.textContent = this.value;
     }
     */
+
     // Setup listeners.
     var dropZone = document.getElementById('drop');
     dropZone.addEventListener('dragover', handleDragOver, false);
@@ -31,39 +30,10 @@ window.addEventListener('load', (event) => {
     fileInput.addEventListener('change', handleFileSelect, false);
 });
 
-async function handleTifF(file) {
-    const tiff = await GeoTIFF.fromBlob(file);
-    outputSpan.textContent = 'Got blob, starting to process.';
-    processimage(tiff);
-}
-
-async function handleCr2(f) {
-    console.log('Is cr2');
-    var reader = new FileReader();
-
-    reader.onload = (function (o) {
-        return function (e) {
-            // Get the image file as a buffer
-            var buf = new Uint8Array(e.currentTarget.result);
-            /*
-            // Get the RAW metadata
-            var metadata = dcraw(buf, { verbose: true, identify: true }).split('\n').filter(String);
-            console.log(metadata);
-*/
-
-            outputSpan.textContent = 'Converting to TIFF...';
-            // Convert to TIFF
-            const tiffFile = dcraw(buf, { exportAsTiff: true, use16BitLinearMode: true, useExportMode: true });
-            outputSpan.textContent = 'TIFF conversion to arraybuffer completed, converting to blob...';
-
-            tiffBlob = new Blob([tiffFile]);
-            outputSpan.textContent = 'TIFF converted to blob';
-            handleTifF(tiffBlob);
-
-        };
-    })(f);
-
-    reader.readAsArrayBuffer(f);
+function handleDragOver(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'copy';
 }
 
 function handleFileSelect(evt) {
@@ -79,7 +49,7 @@ function handleFileSelect(evt) {
     const filetype = files[0].name.split('.').pop();
     if (filetype.toUpperCase() == 'TIF' || filetype.toUpperCase() == 'TIFF') {
         outputSpan.textContent = 'TIFF file detected, starting to process...';
-        handleTifF(files[0]);
+        handleTiff(files[0]);
     } else if (filetype == 'CR2') {
         outputSpan.textContent = 'CR2 file detected, starting to process...';
         handleCr2(files[0]);
@@ -88,35 +58,109 @@ function handleFileSelect(evt) {
     }
 }
 
-function handleDragOver(evt) {
-    evt.stopPropagation();
-    evt.preventDefault();
-    evt.dataTransfer.dropEffect = 'copy';
-}
-
-// Note: GeoTIFF.Pool will not work
-
-async function processimage(tiff) {
+async function handleTiff(file) {
+    outputSpan.textContent = 'Getting blob';
+    const tiff = await GeoTIFF.fromBlob(file);
     outputSpan.textContent = 'Getting image from tiff';
     const image = await tiff.getImage(); // by default, the first image is read.
     outputSpan.textContent = 'Image loaded';
-    /*
-    const width = image.getWidth();
-    const height = image.getHeight();
-    const tileWidth = image.getTileWidth();
-    const tileHeight = image.getTileHeight();
+
     const samplesPerPixel = image.getSamplesPerPixel();
-    console.log({ image: image, width: width, height: height, tileHeight: tileHeight, samplesPerPixel: samplesPerPixel });
-    */
+    outputSpan.textContent = 'Samples per pixel = ' + samplesPerPixel;
+    console.log('Samples per pixel = ' + samplesPerPixel)
+
+    // const tileWidth = image.getTileWidth();
+    // const tileHeight = image.getTileHeight();
+    // console.log({ image: image, width: width, height: height, tileHeight: tileHeight, samplesPerPixel: samplesPerPixel });
+
     const data = await image.readRasters();
 
     outputSpan.textContent = 'Data converted to raster';
+    processimage(data[0], image.getWidth(), image.getHeight());
+}
 
-    const Xcenter = await Math.floor(image.getWidth() / 2);
-    const Ycenter = await Math.floor(image.getHeight() / 2);
-    const centerIndex = await image.getWidth() * Ycenter;
-    const verticalCenterLine = await data[0].slice(centerIndex, centerIndex + image.getWidth());
-    const horizontalCenterLine = await getcolumn(data[0], Xcenter, image.getWidth(), image.getHeight());
+async function handleTiffRGB(file) {
+    outputSpan.textContent = 'Getting blob';
+    const tiff = await GeoTIFF.fromBlob(file);
+    outputSpan.textContent = 'Getting image from tiff';
+    const image = await tiff.getImage(); // by default, the first image is read.
+    outputSpan.textContent = 'Image loaded';
+
+    const samplesPerPixel = image.getSamplesPerPixel();
+    outputSpan.textContent = 'Samples per pixel = ' + samplesPerPixel;
+    console.log('Samples per pixel = ' + samplesPerPixel)
+
+    // const tileWidth = image.getTileWidth();
+    // const tileHeight = image.getTileHeight();
+    // console.log({ image: image, width: width, height: height, tileHeight: tileHeight, samplesPerPixel: samplesPerPixel });
+
+    const data = await image.readRasters();
+
+    outputSpan.textContent = 'Data converted to raster';
+    processimage(RBBtoGrey(data[0]), image.getWidth(), image.getHeight());
+}
+
+function RBBtoGrey(data) {
+    const newLength = data.length / 3;
+    console.log('Data length: '+data.length+' new length: '+newLength);
+    if (newLength % 1 == 0) {
+        const avg = new Array(newLength);
+        var j = 0;
+        var c = 0;
+        var sum = 0;
+        for (let i = 0; i < data.length; i++) {
+            sum += data[i];
+            c++;
+            if (c == 2) {
+                avg[j] = Math.round(sum/3);
+                sum = 0;
+                j++;
+                c = 0;
+            }
+        }
+        console.log(avg);
+
+        return avg;
+    }else{
+        console.error('Data length must be multple of 3, but is '+data.length);
+        return null;
+    }
+}
+
+async function handleCr2(f) {
+    var reader = new FileReader();
+
+    reader.onload = (function (o) {
+        return function (e) {
+            // Get the image file as a buffer
+            var buf = new Uint8Array(e.currentTarget.result);
+            /*
+            // Get the RAW metadata
+            var metadata = dcraw(buf, { verbose: true, identify: true }).split('\n').filter(String);
+            console.log(metadata);
+            */
+
+            outputSpan.textContent = 'Converting to TIFF...';
+            // Convert to TIFF
+            const tiffFile = dcraw(buf, { exportAsTiff: true, use16BitLinearMode: true, useExportMode: true });
+            outputSpan.textContent = 'TIFF conversion to arraybuffer completed, converting to blob...';
+
+            tiffBlob = new Blob([tiffFile]);
+            outputSpan.textContent = 'TIFF converted to blob';
+            handleTiff(tiffBlob);
+
+        };
+    })(f);
+
+    reader.readAsArrayBuffer(f);
+}
+
+async function processimage(data, width, height) {
+    const Xcenter = await Math.floor(width / 2);
+    const Ycenter = await Math.floor(height / 2);
+    const centerIndex = await width * Ycenter;
+    const verticalCenterLine = await data.slice(centerIndex, centerIndex + width);
+    const horizontalCenterLine = await getcolumn(data, Xcenter, width, height);
 
     const horJND = jnd(horizontalCenterLine);
     const vertJND = jnd(verticalCenterLine);
@@ -124,26 +168,22 @@ async function processimage(tiff) {
     updateLine(horJND, line);
     updateLine(vertJND, horizontal_line);
 
-    /*
-    slider.oninput = function () {
-        outputSpan.textContent = this.value;
-        updateLine(jnd(repeatSmooth(horizontalCenterLine, this.value)), line);
-    }
-    */
-
-    plotImage(data[0], image.getWidth(), image.getHeight());
+    plotImage(data, width, height);
 
     // calculations
     const max = await Math.max.apply(null, horizontalCenterLine);
     const min = await Math.min.apply(null, horizontalCenterLine);
     const maxDiff = await Math.round(Math.max.apply(null, horJND) * 10) / 10;
 
+    // display calculations
     maxValueSpan.textContent = await maxDiff + '%';
     uniformitySpan.textContent = await Math.round(min / max * 1000) / 10 + '%';
     document.getElementById("calculations").style.display = "block";
     document.getElementById("chart-container").style.display = "block";
 }
 
+
+// calculate the perceptual brightness differences compared to the lowest pixel value.
 function jnd(data) {
     var jnd = new Array(data.length);
     min = Math.min.apply(null, data);
@@ -153,6 +193,8 @@ function jnd(data) {
     return jnd;
 }
 
+// calculate the perceptual brightness differences compared to the lowest pixel value times
+// and scale to max value.
 function scaledJnd(data) {
     var jnd = new Array(data.length);
     min = Math.min.apply(null, data);
@@ -160,27 +202,6 @@ function scaledJnd(data) {
         jnd[i] = (Math.pow(data[i] / min, 0.33) - 1) / 0.079 * 65536;
     }
     return jnd;
-}
-
-var smoothedArrays = [];
-
-function repeatSmooth(values, repeat) {
-    if (smoothedArrays.length == 0) {
-        smoothedArrays.push(values);
-    }
-    smoother = smooth(values);
-    for (let i = smoothedArrays.length; i < repeat * 5; i++) {
-        smoothedArrays[i] = smooth(smoothedArrays[i - 1]);
-    }
-    return smoothedArrays[repeat * 5];
-}
-
-function average(data) {
-    var sum = data.reduce(function (sum, value) {
-        return sum + value;
-    }, 0);
-    var avg = sum / data.length;
-    return avg;
 }
 
 function getcolumn(array, column, width, height) {
@@ -278,11 +299,11 @@ async function plotImage(data, width, height) {
     });
     plot.render();
 
-    canvas.addEventListener('mousemove', function (evt) {
+    canvas.addEventListener('mousedown', function (evt) {
         var mousePos = getMousePos(canvas, evt);
         const columnIndex = Math.round(width * (mousePos.x / canvas.offsetWidth));
         const rowIndex = Math.round(width * (mousePos.y / canvas.offsetHeight));
-        const verticalLine = data.slice(rowIndex*width, rowIndex*width + width);
+        const verticalLine = data.slice(rowIndex * width, rowIndex * width + width);
         const horizontalLine = getcolumn(data, columnIndex, width, height);
 
         const horJND = jnd(horizontalLine);
