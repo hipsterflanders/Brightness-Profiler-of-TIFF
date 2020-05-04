@@ -30,6 +30,50 @@ window.addEventListener('load', (event) => {
     fileInput.addEventListener('change', handleFileSelect, false);
 });
 
+var CalibrationConstant;
+var ExposureTime;
+var ApertureNumber;
+var ISO;
+var PixelToLuminousuty;
+var knownLuminance;
+
+function getCalibrationValues() {
+    CalibrationConstant = document.getElementById("CalibrationConstant");
+    ExposureTime = document.getElementById("ExposureTime");
+    ApertureNumber = document.getElementById("ApertureNumber");
+    ISO = document.getElementById("ISO");
+
+    PixelToLuminousuty = (ApertureNumber * ApertureNumber / (ExposureTime * ISO)) / CalibrationConstant;
+}
+
+function toLuminance(pixelValue) {
+    luminance = pixelValue * PixelToLuminousuty;
+}
+
+function getCalibrationConstant(knownLuminance, avgPixelValue) {
+    return calibrationConstant = knownLuminance / avgPixelValue;
+}
+
+// get the average pixel value within a cirkel with centerpoint (x,y)
+function getAveragePixelValue(data, width, height, x, y, radius) {
+    var sum = 0;
+    var n = 0;
+
+    r_sqr = radius*radius;
+    for (let i = 0; i < data.length; i++) {
+        const dx =  x-i%height;
+        const dy = y-Math.trunc(i/width);
+
+        // if in the circle, add to the average sum
+        if (dx*dx+dy*dy < r_sqr) {
+            sum += data[i];
+            n++;
+        }
+    }
+
+    return Math.round(sum / n);
+}
+
 function handleDragOver(evt) {
     evt.stopPropagation();
     evt.preventDefault();
@@ -102,7 +146,7 @@ async function handleTiffRGB(file) {
 
 function RBBtoGrey(data) {
     const newLength = data.length / 3;
-    console.log('Data length: '+data.length+' new length: '+newLength);
+    console.log('Data length: ' + data.length + ' new length: ' + newLength);
     if (newLength % 1 == 0) {
         const avg = new Array(newLength);
         var j = 0;
@@ -112,7 +156,7 @@ function RBBtoGrey(data) {
             sum += data[i];
             c++;
             if (c == 2) {
-                avg[j] = Math.round(sum/3);
+                avg[j] = Math.round(sum / 3);
                 sum = 0;
                 j++;
                 c = 0;
@@ -121,8 +165,8 @@ function RBBtoGrey(data) {
         console.log(avg);
 
         return avg;
-    }else{
-        console.error('Data length must be multple of 3, but is '+data.length);
+    } else {
+        console.error('Data length must be multple of 3, but is ' + data.length);
         return null;
     }
 }
@@ -289,8 +333,24 @@ function updateLine(data, line) {
 
 async function plotImage(data, width, height) {
     const canvas = document.getElementById("plot");
-    canvas.parentElement.style.height = height;
-    canvas.parentElement.style.width = width;
+    const crossLine = document.createElementNS('http://www.w3.org/2000/svg', "line");
+    //canvas.parentElement.style.height = height;
+    //canvas.parentElement.style.width = width;
+    if (height > width) {
+        canvas.style.height = '100vh';
+        canvas.style.width = width;
+        canvas.parentElement.parentElement.setAttribute('class', 'grid-container')
+    } else {
+        canvas.style.width = '95vw';
+        canvas.style.height = height;
+        canvas.parentElement.parentElement.setAttribute('class', 'grid-container2')
+    }
+
+    crossLine.setAttribute('x1', 200);
+    crossLine.setAttribute('x2', 200);
+    crossLine.setAttribute('y1', 0);
+    crossLine.setAttribute('y2', 500);
+    crossLine.setAttribute('style', "stroke:black;stroke-width:1");
     console.log(canvas.parentElement)
     const plot = new plotty.plot({
         canvas,
@@ -301,6 +361,8 @@ async function plotImage(data, width, height) {
         colorScale: "inferno"
     });
     plot.render();
+
+    canvas.parentElement.parentElement.append(crossLine);
 
     canvas.addEventListener('mousedown', function (evt) {
         var mousePos = getMousePos(canvas, evt);
