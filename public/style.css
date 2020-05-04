@@ -12,32 +12,50 @@ body {
 
 @media (min-width: 1000px) {
   .grid-container {
-    height: 80vh;
     display: -ms-grid;
     display: grid;
     grid-column-gap: 5px;
-    -ms-grid-rows: auto max-content auto;
-        grid-template-rows: auto -webkit-max-content auto;
-        grid-template-rows: auto max-content auto;
+    -ms-grid-rows: max-content auto auto;
+        grid-template-rows: -webkit-max-content auto auto;
+        grid-template-rows: max-content auto auto;
     -ms-grid-columns: auto 1fr;
         grid-template-columns: auto 1fr;
-        grid-template-areas: "inputArea inputArea" "imageArea calculationArea" "imageArea chartArea";
+        grid-template-areas: "imageArea calculationArea" "imageArea chartArea" "formArea inputArea";
+  }
+  .grid-container2 {
+    display: -ms-grid;
+    display: grid;
+    grid-column-gap: 5px;
+    -ms-grid-rows: auto max-content auto auto;
+        grid-template-rows: auto -webkit-max-content auto auto;
+        grid-template-rows: auto max-content auto auto;
+    -ms-grid-columns: max-content 1fr;
+        grid-template-columns: -webkit-max-content 1fr;
+        grid-template-columns: max-content 1fr;
+        grid-template-areas: "formArea calculationArea" "chartArea chartArea" "imageArea imageArea" "inputArea inputArea";
+  }
+  .input-form {
+    max-width: 10em;
   }
 }
 
 @media (max-width: 1000px) {
-  .grid-container {
+  .grid-container, .grid-container2 {
     display: -ms-grid;
     display: grid;
     grid-column-gap: 5px;
-    -ms-grid-rows: auto auto auto auto;
-        grid-template-rows: auto auto auto auto;
-        grid-template-areas: "inputArea" "calculationArea" "chartArea" "imageArea";
+    -ms-grid-rows: auto auto auto auto auto;
+        grid-template-rows: auto auto auto auto auto;
+        grid-template-areas: "calculationArea" "formArea" "chartArea" "imageArea" "inputArea";
+  }
+  .input-form {
+    max-width: 95vw;
   }
 }
 
 label {
   font-weight: bold;
+  margin-top: 0.5em;
 }
 
 .info {
@@ -50,6 +68,13 @@ label {
   text-align: center;
 }
 
+.input-form {
+  grid-area: formArea;
+  display: -ms-grid;
+  display: grid;
+  margin-bottom: 1em;
+}
+
 .drop-area {
   border: 2px dashed #bbb;
   border-radius: 5px;
@@ -59,13 +84,7 @@ label {
   margin: 20px;
 }
 
-/*
-canvas {
-    
-}
-*/
 #crosslines {
-  height: 100vh;
   padding-left: 0;
   padding-right: 0;
   margin-left: auto;
@@ -92,6 +111,7 @@ canvas {
   grid-area: calculationArea;
   display: none;
   padding: 1em;
+  margin: 20px;
 }
 
 .slidecontainer {

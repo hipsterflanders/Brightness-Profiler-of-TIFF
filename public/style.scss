@@ -11,47 +11,75 @@ body {
 
 @media (min-width: 1000px) {
     .grid-container {
-        height: 80vh;
         display: grid;
         grid-column-gap: 5px;
 
-        grid-template-rows: auto max-content auto;
+        grid-template-rows: max-content auto auto;
         grid-template-columns: auto 1fr;
         grid-template-areas:
-            "inputArea inputArea"
             "imageArea calculationArea"
-            "imageArea chartArea";
+            "imageArea chartArea"
+            "formArea inputArea";
+    }
+
+    .grid-container2 {
+        display: grid;
+        grid-column-gap: 5px;
+
+        grid-template-rows: auto max-content auto auto;
+        grid-template-columns: max-content 1fr;
+        grid-template-areas:
+            "formArea calculationArea"
+            "chartArea chartArea"
+            "imageArea imageArea"
+            "inputArea inputArea";
+    }
+
+    .input-form {
+        max-width: 10em;
     }
 }
 @media (max-width: 1000px) {
-    .grid-container {
+    .grid-container, .grid-container2 {
         display: grid;
         grid-column-gap: 5px;
         //grid-row-gap: 10px;
         //justify-items: center;
 
-        grid-template-rows: auto auto auto auto;
+        grid-template-rows: auto auto auto auto auto;
         //grid-template-columns: 1fr;
-        grid-template-areas:
-            "inputArea"
+        grid-template-areas:       
             "calculationArea"
+            "formArea"
             "chartArea"
-            "imageArea";
+            "imageArea"
+            "inputArea";
+    }
+
+    .input-form {
+        max-width: 95vw;
     }
 }
 
-label{
+label {
     font-weight: bold;
+    margin-top: 0.5em;
 }
 
-.info{
+.info {
     font-style: italic;
 }
 
-#output{
+#output {
     color: darkgrey;
     width: 100%;
     text-align: center;
+}
+
+.input-form {
+    grid-area: formArea;
+    display: grid;
+    margin-bottom: 1em;
 }
 
 .drop-area {
@@ -63,14 +91,12 @@ label{
     margin: 20px;
 }
 
-/*
 canvas {
-    
+    // height: 100vh;
 }
-*/
 
-#crosslines{
-    height: 100vh;
+#crosslines {
+    //height: 100vh;
     padding-left: 0;
     padding-right: 0;
     margin-left: auto;
@@ -98,6 +124,7 @@ canvas {
     grid-area: calculationArea;
     display: none;
     padding: 1em;
+    margin:20px;
 }
 
 .slidecontainer {

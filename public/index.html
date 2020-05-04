@@ -24,6 +24,14 @@
     <h1>Brightness plotter</h1>
     <p>Load a .tiff file to plot the brightness and get the max and min values.</p>
     <div class='grid-container'>
+        <form class="input-form">
+            <label for="CalibrationConstant">Calibration constant: </label><input type="number"
+                name="CalibrationConstant" id="CalibrationConstant">
+            <label for="ExposureTime">Exposure time: </label><input type="number" name="ExposureTime" id="ExposureTime">
+            <label for="ApertureNumber">Aperture number: </label><input type="number" name="ApertureNumber"
+                id="ApertureNumber">
+            <label for="ISO">ISO: </label><input type="number" name="ISO" id="ISO">
+        </form>
         <div class="input-container">
             <div class="drop-area" id="drop">
                 <h5>Drop RAW files here</h5>
@@ -32,12 +40,9 @@
             <div id="output"></div>
         </div>
 
-        <svg id="crosslines">
-            <line x1="0" y1="0" x2="200" y2="200" style="stroke:black;stroke-width:10" />
-            <foreignObject>
-                <canvas id="plot"></canvas>
-            </foreignObject>
-        </svg>
+        <div id="crosslines">
+            <canvas id="plot" width="0px" height="0px"></canvas>
+        </div>
 
         <div class='calculations' id='calculations'>
             <div>
@@ -57,13 +62,13 @@
             </div>
 
         </div>
-        <footer>
-            Made by
-            <author>
-                Perre Verhoeven
-            </author>
-        </footer>
     </div>
+    <footer>
+        Made by
+        <author>
+            Perre Verhoeven
+        </author>
+    </footer>
 </body>
 
 </html>
